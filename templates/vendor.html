@@ -1,0 +1,19 @@
+<html>
+<body>
+
+<h1>🍔 Vendor Dashboard</h1>
+
+<h2>Total Orders: {{orders|length}}</h2>
+
+<ul>
+{% for order in orders %}
+<li>{{order}}</li>
+{% endfor %}
+</ul>
+
+<br>
+
+<a href="/vendor-menu">Edit Menu</a>
+
+</body>
+</html>
