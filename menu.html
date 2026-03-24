@@ -1,20 +1,21 @@
-<!DOCTYPE html>
 <html>
 <body>
-  <h2>TODAY’S MENU</h2>
 
-  <ol>
-    <li>Veg Thali</li>
-    <li>Paneer Roll</li>
-    <li>Biryani</li>
-  </ol>
+<h2>Today's Menu</h2>
 
-  <h3>Do you want to eat today?</h3>
+<ul>
+{% for item in menu %}
+<li>{{item}}</li>
+{% endfor %}
+</ul>
 
-  <form method="POST" action="/confirm">
-    <input type="hidden" name="email" value="{{ email }}">
-    <button name="decision" value="yes">YES</button>
-    <button name="decision" value="no">NO</button>
-  </form>
+<form method="POST" action="/confirm">
+<input type="hidden" name="email" value="{{email}}">
+
+<button name="decision" value="yes">YES</button>
+<button name="decision" value="no">NO</button>
+
+</form>
+
 </body>
 </html>
