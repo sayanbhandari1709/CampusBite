@@ -1,64 +1,15 @@
-<!DOCTYPE html>
 <html>
-<head>
-  <title>CampusBite – Vendor</title>
-  <style>
-    body {
-      font-family: Arial;
-      background: #f4f6f8;
-      margin: 0;
-    }
-    header {
-      background: #333;
-      color: white;
-      padding: 14px 20px;
-    }
-    .container {
-      max-width: 700px;
-      margin: 30px auto;
-    }
-    .card {
-      background: white;
-      padding: 16px;
-      margin-bottom: 12px;
-      border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    .status {
-      padding: 6px 12px;
-      border-radius: 6px;
-      background: orange;
-      color: white;
-    }
-  </style>
-</head>
-
 <body>
 
-<header>
-  <h2>CampusBite – Vendor Panel 🍳</h2>
-</header>
+<h2>Vendor Dashboard</h2>
 
-<div class="container">
-  <h3>Total Orders: {{ orders|length }}</h3>
+<ul>
+{% for order in orders %}
+<li>{{order.email}} - {{order.status}}</li>
+{% endfor %}
+</ul>
 
-  {% if orders %}
-    {% for order in orders %}
-      <div class="card">
-        <div>
-          <b>{{ order.email }}</b><br>
-          <small>Status: {{ order.status }}</small>
-        </div>
-        <div class="status">{{ order.status }}</div>
-      </div>
-    {% endfor %}
-  {% else %}
-    <p>No orders yet.</p>
-  {% endif %}
-</div>
+<a href="/vendor-menu">Edit Menu</a>
 
 </body>
 </html>
