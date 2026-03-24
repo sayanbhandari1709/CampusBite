@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CampusBite - Student</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; background:#f8f9fa; margin:0; padding:0; }
+    header { background:#ff4d4d; color:white; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; }
+    header h1 { margin:0; font-size:20px; }
+    .cart-btn { background:white; color:#ff4d4d; border:none; padding:8px 12px; border-radius:18px; font-weight:bold; cursor:pointer; }
+
+    /* Filters */
+    .filters { display:flex; gap:8px; padding:12px; background:white; align-items:center; margin:8px; border-radius:8px; }
+    .filters input[type="text"] { flex:1; padding:8px; border:1px solid #ddd; border-radius:6px; }
+    .filters select, .filters button { padding:8px; border :1px solid #ddd; border-radius:6px; cursor:pointer; background:white; }
+    .filters button.active { background:#ff4d4d; color:white; border:none; }
+
+    /* Layout */
+    .container { display:flex; gap:16px; padding:16px; }
+    .left { flex:1; }
+    .right { width:360px; }
+
+    /* Menu */
+    .menu { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:12px; }
+    .card { background:white; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.08); padding:12px; text-align:center; }
+    .card h3 { margin:8px 0 6px; font-size:16px; }
+    .card p { margin:4px 0 8px; color: #666; font-size:14px; }
+    .add-btn, .qty-btn { background:#ff4d4d; color:white; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; font-size:13px; }
+    .qty-controls { display:flex; justify-content:center; align-items:center; gap:8px; margin-top:8px; }
+    .qty-controls span { min-width:24px; text-align:center; display:inline-block; }
+
+    /* Floating cart button */
+    #floatingCart {
+      position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
+      background:#ff4d4d; color:white; font-size:18px; font-weight:bold;
+      border:none; border-radius:30px; padding:14px 26px; cursor:pointer;
+      box-shadow:0 4px 10px rgba(0,0,0,0.2); z-index:1001;
+    }
+
+    /* Modals */
+    .modal { display:none; position:fixed; inset:0; background: rgba(0,0,0,0.45); justify-content:center; align-items:center; padding:16px; z-index:1000; }
+    .modal-content { background:white; border-radius:10px; width:100%; max-width:520px; padding:16px; box-shadow:0 6px 18px rgba(0,0,0,0.2); }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; }
+    .close { cursor:pointer; font-size:20px; }
+
+    /* History */
+    #history { padding:12px; }
+    .history-card { background:white; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.06); margin-bottom:12px; padding:12px; display:flex; justify-content:space-between; gap:12px; align-items:center; }
+
+    .receipt-print {
+      width: 320px; padding:12px; background:white; border:2px dashed #333; border-radius:8px; font-family:monospace; color:#222;
+    }
+
+    /* Login modal */
+    #loginModal input, #loginModal select {
+      width: 100%; padding: 10px; margin: 6px 0; border: 1px solid #ccc; border-radius: 6px;
+    }
+    #loginModal button {
+      background: #ff4d4d; color: white; border: none; padding: 10px; border-radius: 6px; width: 100%; cursor: pointer;
+    }
+    #loginModal h2 { text-align: center; color: #ff4d4d; }
+
+    @media (max-width:900px) {
+      .container { flex-direction:column; }
+      .right { width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CampusBite 🍴</h1>
+    <div id="welcomeText"></div>
+  </header>
+
+  <div class="filters" style="margin:12px;">
+    <input id="searchBox" placeholder="Search food..." oninput="renderMenu()" />
+    <button id="filter-all" class="active" onclick="setFilter('all')">All</button>
+    <button id="filter-veg" onclick="setFilter('veg')">Veg</button>
+    <button id="filter-nonveg" onclick="setFilter('nonveg')">Non-Veg</button>
+  </div>
+
+  <div class="container">
+    <div class="left">
+      <div class="menu" id="menuList"></div>
+    </div>
+    <div class="right">
+      <div id="history">
+        <h3>Order History</h3>
+        <div id="historyList"></div>
+      </div>
+    </div>
+  </div>
+
+  <button id="floatingCart" onclick="openCart()">🛒 View Cart (<span id="cartCount">0</span>)</button>
+
+  <div class="modal" id="cartModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Your Cart</h2>
+        <span class="close" onclick="closeCart()">&times;</span>
+      </div>
+      <div id="cartItems"></div>
+      <button class="add-btn" style="width:100%; margin-top:12px;" onclick="placeOrder()">Place Order</button>
+    </div>
+  </div>
+
+  <div class="modal" id="loginModal" style="display:none;">
+    <div class="modal-content">
+      <h2>Student Login</h2>
+      <input type="text" id="studentName" placeholder="Name">
+      <input type="text" id="studentEnroll" placeholder="Enrollment">
+      <select id="studentYear">
+        <option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option>
+      </select>
+      <button onclick="loginStudent()">Login</button>
+    </div>
+  </div>
+
+  <div class="modal" id="receiptModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Receipt</h2>
+        <span class="close" onclick="closeReceipt()">&times;</span>
+      </div>
+      <div id="receiptPopupContent" style="display:flex; flex-direction:column; align-items:center; gap:12px;"></div>
+      <button class="add-btn" id="downloadPopupBtn">Download Receipt</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <script>
+    const menu = [
+      { name: "Biryani", price: 80, type:"nonveg" },
+      { name: "Masala Dosa", price: 50, type:"veg" },
+      { name: "Sandwich", price: 45, type:"veg" },
+      { name: "Veg Rice Combo", price: 40, type:"veg" },
+      { name: "Chicken Combo", price: 60, type:"nonveg" },
+      { name: "Coke", price: 40, type:"veg" }
+    ];
+
+    let cart = [];
+    let history = JSON.parse(localStorage.getItem("campusHistory")) || [];
+    let tokenCounter = Number(localStorage.getItem("tokenCounter")) || 1;
+    let currentFilter = 'all';
+    let student = null;
+
+    function loginStudent() {
+      const name = document.getElementById('studentName').value.trim();
+      const enroll = document.getElementById('studentEnroll').value.trim();
+      const year = document.getElementById('studentYear').value;
+      if (!name || !enroll) return alert('Please fill all details.');
+      student = { name, enroll, year };
+      localStorage.setItem('studentInfo', JSON.stringify(student));
+      document.getElementById('welcomeText').innerText = `Welcome, ${name}`;
+      document.getElementById('loginModal').style.display = 'none';
+    }
+
+    window.addEventListener('load', () => {
+      const saved = localStorage.getItem('studentInfo');
+      if (saved) {
+        student = JSON.parse(saved);
+        document.getElementById('welcomeText').innerText = `Welcome, ${student.name}`;
+      } else {
+        document.getElementById('loginModal').style.display = 'flex';
+      }
+      renderMenu();
+      renderHistory();
+    });
+
+    function renderMenu() {
+      const search = (document.getElementById('searchBox').value || '').toLowerCase();
+      const menuList = document.getElementById('menuList');
+      menuList.innerHTML = '';
+      menu.forEach((item, index) => {
+        if ((currentFilter === 'veg' && item.type !== 'veg') || (currentFilter === 'nonveg' && item.type !== 'nonveg')) return;
+        if (!item.name.toLowerCase().includes(search)) return;
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.id = `menu-item-${index}`;
+        card.innerHTML = `<h3>${item.name}</h3><p>₹${item.price}</p><div id="controls-${index}"></div>`;
+        menuList.appendChild(card);
+        renderMenuControls(index);
+      });
+    }
+
+    function setFilter(type) {
+      currentFilter = type;
+      document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+      document.getElementById(`filter-${type}`).classList.add('active');
+      renderMenu();
+    }
+
+    function addToCart(index) {
+      const item = menu[index];
+      const found = cart.find(i => i.index === index);
+      if (found) found.quantity++;
+      else cart.push({ name: item.name, price: item.price, quantity: 1, index });
+      updateCartCount(); renderMenuControls(index);
+    }
+
+    function renderMenuControls(index) {
+      const controls = document.getElementById(`controls-${index}`);
+      const existing = cart.find(i => i.index === index);
+      controls.innerHTML = existing ? `
+        <div class="qty-controls">
+          <button class="qty-btn" onclick="decreaseQty(${index})">-</button>
+          <span>${existing.quantity}</span>
+          <button class="qty-btn" onclick="increaseQty(${index})">+</button>
+        </div>` :
+        `<button class="add-btn" onclick="addToCart(${index})">Add ➕</button>`;
+    }
+
+    function increaseQty(i){const f=cart.find(x=>x.index===i);if(f)f.quantity++;updateCartCount();renderMenuControls(i);}
+    function decreaseQty(i){const f=cart.find(x=>x.index===i);if(!f)return;if(f.quantity>1)f.quantity--;else cart=cart.filter(x=>x.index!==i);updateCartCount();renderMenuControls(i);}
+    function updateCartCount(){document.getElementById('cartCount').innerText=cart.reduce((s,i)=>s+i.quantity,0);}
+    function openCart(){document.getElementById('cartModal').style.display='flex';renderCart();}
+    function closeCart(){document.getElementById('cartModal').style.display='none';}
+
+    function renderCart(){
+      const div=document.getElementById('cartItems');
+      if(!cart.length){div.innerHTML='<p>Your cart is empty</p>';return;}
+      let total=0,html='<table style="width:100%"><tr><th>Item</th><th>Qty</th><th>Price</th></tr>';
+      cart.forEach(it=>{html+=`<tr><td>${it.name}</td><td>${it.quantity}</td><td>₹${it.price*it.quantity}</td></tr>`;total+=it.price*it.quantity;});
+      html+=`</table><h3>Total: ₹${total}</h3>`;div.innerHTML=html;
+    }
+
+    function placeOrder() {
+      if (!cart.length) return alert("Your cart is empty!");
+      if (!student) return alert("Please login first!");
+
+      const order = {
+        id: tokenCounter++,
+        student,
+        items: [...cart],
+        total: cart.reduce((s,i)=>s+i.price*i.quantity,0),
+        time:new Date().toISOString(),
+        status:"Pending"
+      };
+
+      // Save in history + sync with admin
+      history.unshift(order);
+      localStorage.setItem("campusHistory", JSON.stringify(history));
+
+      const allOrders = JSON.parse(localStorage.getItem("campusOrders")) || [];
+      allOrders.push(order);
+      localStorage.setItem("campusOrders", JSON.stringify(allOrders));
+
+      localStorage.setItem("tokenCounter", tokenCounter);
+
+      cart = [];
+      updateCartCount(); renderHistory(); renderMenu();
+      closeCart(); showReceipt(order);
+    }
+
+    function renderHistory(){
+      const div=document.getElementById('historyList');
+      if (!history.length) return div.innerHTML = "<p>No orders yet.</p>";
+      div.innerHTML = history.map(h => `
+        <div class='history-card'>
+          <div>
+            <b>Token #${h.id}</b><br>${h.items.map(i=>i.name+' x'+i.quantity).join(', ')}<br>
+            Total: ₹${h.total}<br>
+            <small>${new Date(h.time).toLocaleTimeString()}</small><br>
+            <b style="color:${h.status==='Completed'?'green':h.status==='Preparing'?'orange':'red'}">${h.status}</b>
+          </div>
+          <div id="history-qr-${h.id}" style="width:80px;height:80px;"></div>
+        </div>
+      `).join('');
+
+      // ensure QR generation after rendering
+      setTimeout(() => {
+        history.forEach(h => {
+          const qrDiv = document.getElementById(`history-qr-${h.id}`);
+          if (qrDiv) {
+            qrDiv.innerHTML = "";
+            new QRCode(qrDiv, { text: `Token #${h.id} | ${h.status}`, width: 80, height: 80 });
+          }
+        });
+      }, 300);
+    }
+
+    function showReceipt(order){
+      const modal=document.getElementById('receiptModal');
+      const c=document.getElementById('receiptPopupContent');
+      c.innerHTML=`
+        <div class='receipt-print' id='receiptBox'>
+          <h3>CampusBite</h3>
+          <p>Token #${order.id}</p>
+          <p><b>${order.student.name}</b> (${order.student.enroll})</p>
+          ${order.items.map(i=>`${i.name} x${i.quantity} - ₹${i.price*i.quantity}`).join('<br>')}
+          <hr>Total: ₹${order.total}
+          <div id='qrcode'></div>
+        </div>`;
+      modal.style.display='flex';
+      setTimeout(()=>{ new QRCode(document.getElementById('qrcode'), `Token #${order.id}`); },100);
+    }
+
+    document.getElementById('downloadPopupBtn').onclick=()=>{
+      html2canvas(document.getElementById('receiptBox')).then(canvas=>{
+        const link=document.createElement('a');
+        link.download='receipt.png'; link.href=canvas.toDataURL(); link.click();
+      });
+    };
+
+    function closeReceipt(){document.getElementById('receiptModal').style.display='none';}
+  </script>
+</body>
+</html>

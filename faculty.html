@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>CampusBite - Faculty</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+
+<style>
+  body { font-family: Arial, sans-serif; background:#f8f9fa; margin:0; }
+  header {
+    background:#ff4d4d; color:white; padding:12px 16px;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  header h1 { margin:0; font-size:20px; }
+
+  .container { padding:16px; }
+
+  /* Buttons */
+  .btn {
+    background:#ff4d4d; color:white; border:none;
+    padding:10px 14px; border-radius:8px;
+    font-weight:bold; cursor:pointer;
+  }
+
+  /* Menu */
+  .menu {
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:12px;
+  }
+  .card {
+    background:white; border-radius:10px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.1);
+    padding:14px; text-align:center;
+  }
+
+  /* Modals */
+  .modal {
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,0.45);
+    justify-content:center; align-items:center;
+    z-index:1000;
+  }
+  .modal-content {
+    background:white; border-radius:10px;
+    padding:20px; width:100%; max-width:400px;
+  }
+  input {
+    width:100%; padding:10px;
+    margin:6px 0; border:1px solid #ccc;
+    border-radius:6px;
+  }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>CampusBite 🍴</h1>
+  <div id="facultyName"></div>
+</header>
+
+<div class="container">
+  <div class="menu" id="menu"></div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal" id="loginModal">
+  <div class="modal-content">
+    <h2 style="text-align:center;color:#ff4d4d;">Faculty Login</h2>
+    <input id="facultyId" placeholder="Email or Phone">
+    <button class="btn" style="width:100%;" onclick="loginFaculty()">Continue</button>
+  </div>
+</div>
+
+<!-- DECISION MODAL -->
+<div class="modal" id="decisionModal">
+  <div class="modal-content" style="text-align:center;">
+    <h2>Do you want to eat?</h2>
+    <br>
+    <button class="btn" onclick="showMenu()">YES</button>
+    <br><br>
+    <button class="btn" style="background:#666;" onclick="bye()">NO</button>
+  </div>
+</div>
+
+<script>
+  const facultyMenu = [
+    { name:"Veg Thali", price:80 },
+    { name:"Paneer Roll", price:60 },
+    { name:"Biryani", price:120 },
+    { name:"Tea", price:10 }
+  ];
+
+  let faculty = null;
+
+  function loginFaculty() {
+    const id = document.getElementById("facultyId").value.trim();
+    if (!id) return alert("Enter Email or Phone");
+    faculty = id;
+    localStorage.setItem("facultyUser", id);
+    document.getElementById("facultyName").innerText = `Welcome, Faculty`;
+    document.getElementById("loginModal").style.display = "none";
+    document.getElementById("decisionModal").style.display = "flex";
+  }
+
+  function showMenu() {
+    document.getElementById("decisionModal").style.display = "none";
+    renderMenu();
+  }
+
+  function bye() {
+    localStorage.removeItem("facultyUser");
+    alert("Thank you! Bye 👋");
+    location.reload();
+  }
+
+  function renderMenu() {
+    const div = document.getElementById("menu");
+    div.innerHTML = "";
+    facultyMenu.forEach(item => {
+      div.innerHTML += `
+        <div class="card">
+          <h3>${item.name}</h3>
+          <p>₹${item.price}</p>
+          <button class="btn">Add</button>
+        </div>
+      `;
+    });
+  }
+
+  window.onload = () => {
+    const saved = localStorage.getItem("facultyUser");
+    if (saved) {
+      faculty = saved;
+      document.getElementById("facultyName").innerText = `Welcome, Faculty`;
+      document.getElementById("decisionModal").style.display = "flex";
+    } else {
+      document.getElementById("loginModal").style.display = "flex";
+    }
+  };
+</script>
+
+</body>
+</html>

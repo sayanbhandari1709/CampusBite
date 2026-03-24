@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Faculty Decision</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='faculty.css') }}">
+</head>
+<body>
+
+<header>
+  <h1>CampusBite</h1>
+</header>
+
+<section class="menu">
+  <h2>Do you want to eat?</h2>
+
+  <div class="menu-items">
+
+    <div class="item">
+      <button onclick="location.href='/food'">YES</button>
+    </div>
+
+    <div class="item">
+      <button style="background:#dc3545;" onclick="location.href='/exit'">NO</button>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  © CampusBite
+</footer>
+
+</body>
+</html>
